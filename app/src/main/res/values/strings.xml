@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BestHack23</string>
+    <string name="upload_file">Upload file</string>
 </resources>
