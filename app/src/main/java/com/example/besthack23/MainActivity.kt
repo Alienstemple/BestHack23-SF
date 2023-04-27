@@ -11,7 +11,9 @@ import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.Flow
 import kotlin.coroutines.coroutineContext
 
 class MainActivity : AppCompatActivity() {
@@ -29,46 +31,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun registerOpenLauncher() {
-        openLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            try {
-                uri?.let {
-                    fileAsString = contentResolver.openInputStream(uri)?.use {
-                        String(it.readBytes())
-                    } ?: throw IllegalStateException("Can't open input stream")
+        openLauncher =
+            registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                try {
+                    uri?.let {
+                        fileAsString = contentResolver.openInputStream(uri)?.use {
+                            String(it.readBytes())
+                        } ?: throw IllegalStateException("Can't open input stream")
+//                        trySendBlocking(fAString)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Cannot open file! ${e.stackTrace}")
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Cannot open file! ${e.stackTrace}")
             }
-        }
+
     }
 
     private fun setUploadFileListener() {
         binding.uploadBtn.setOnClickListener {
             runBlocking {
-                openLauncher.launch(arrayOf("text/plain", "text/fb2+xml", "application/epub+zip"))
+                launch { open() }.join()
                 Log.d(TAG, "File is: $fileAsString")
             }
         }
     }
 
-//    private fun open() = callbackFlow<String> {
-//
-//        val openLauncher: ActivityResultLauncher<Array<String>> =
-//            registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-//                try {
-//                    uri?.let {
-//                        val resString = contentResolver.openInputStream(uri)?.use {
-//                            String(it.readBytes())
-//                        } ?: throw IllegalStateException("Can't open input stream")
-//                        trySendBlocking(resString)
-//                    }
-//                } catch (e: Exception) {
-//                    Log.e(TAG, "Cannot open file! ${e.stackTrace}")
-//                }
-//            }
-//
-//        openLauncher.launch(arrayOf("text/plain", "text/fb2+xml", "application/epub+zip"))
-//    }
+    private fun open() {  // callbackFlow<String>
+        openLauncher.launch(arrayOf("text/plain", "text/fb2+xml", "application/epub+zip"))
+    }
 
     companion object {
         const val TAG = "MainActLog"
